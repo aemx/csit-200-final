@@ -52,19 +52,26 @@ window.listen()
 
 # Set up ball
 ball = t.Turtle()
+ball.speed(0)
 ball.shape("square")
 ball.color("white")
 ball.shapesize(0.7)
 ball.up()
 ball.goto(0, 0)
-ball.velocity = -1
+ball.velocity_x = 1
+ball.velocity_y = 1
 
 while True: #needs to change to something != exit
     window.update()
     
     # Update loop for player movement
-    player.sety(clamp(player.ycor() + player.velocity*sh/150, (-sh/2)*0.86, (sh/2)*0.86))
-    
-    # Update loop for ball movement
-    ball.velocity *= -1 if abs(ball.ycor()) >= (sh/2)*0.95 else 1
-    ball.sety(ball.ycor() + ball.velocity*sh/150)
+    player.sety(clamp(player.ycor() + player.velocity*8, (-sh/2)+60, (sh/2)-60))
+
+    # Update loop for ball x movement
+    ball.velocity_y *= -1 if abs(ball.ycor()) >= (sh/2)-16 else 1
+    ball.goto(ball.xcor() + ball.velocity_x*8, ball.ycor() + ball.velocity_y*8)
+
+    # If the ball crosses the threshold, reset everything
+    if abs(ball.xcor()) >= (sw/2.1):
+        player.sety(0)
+        ball.goto(0,0)
