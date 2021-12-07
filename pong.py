@@ -1,5 +1,6 @@
 import turtle as t
 from time import sleep
+import random
 
 # Set up global variables
 sw, sh = 1280, 720
@@ -49,6 +50,7 @@ def paddle(pn, color):
 # Set up paddles
 player = paddle(1, "#4b8bbe")
 opponent = paddle(2, "#ffe873")
+opponent.hitpos = random.random()
 
 # Player control
 # player_stop_up/down prevents stutter when both keys are pressed.
@@ -79,17 +81,23 @@ while True:
     # Player movement
     player.sety(clamp(player.ycor() + player.velocity*8, (-sh/2)+60, (sh/2)-60))
 
-    # Update loop for ball movement
+    # Opponent movement
+    opponent.sety(clamp(ball.ycor() + 75 * opponent.hitpos, (-sh/2)+60, (sh/2)-60))
+
+    # Ball movement
     ball.velocity_y *= -1 if abs(ball.ycor()) >= (sh/2)-16 else 1
     ball.goto(ball.xcor() + ball.velocity_x*8, ball.ycor() + ball.velocity_y*8)
 
     # Paddle collision logic for player
-    ball.velocity_x *= -1 if ball.xcor() in range_float(-sw/2.35+5, -sw/2.35+20) and \
-    abs(ball.ycor()) in range_float(player.ycor()-62,(player.ycor()+62)) else 1
+    # Also, generate a new position for the opponent to follow
+    if ball.xcor() in range_float(-sw/2.35+5, -sw/2.35+20) and \
+    ball.ycor() in range_float(player.ycor()-62,(player.ycor()+62)):
+        ball.velocity_x *= -1
+        opponent.hitpos = random.random()
 
     # Paddle collision logic for opponent
-    ball.velocity_x *= -1 if ball.xcor() in range_float(sw/2.35-20, -sw/2.35-5) and \
-    abs(ball.ycor()) in range_float(opponent.ycor()-62,(opponent.ycor()+62)) else 1
+    ball.velocity_x *= -1 if ball.xcor() in range_float(sw/2.35-20, sw/2.35-5) and \
+    ball.ycor() in range_float(opponent.ycor()-62,(opponent.ycor()+62)) else 1
 
     # If the ball crosses the threshold, reset everything
     if abs(ball.xcor()) >= (sw/2.1):
