@@ -1,5 +1,5 @@
 import turtle as t
-import time
+from time import sleep
 
 # Set up global variables
 sw, sh = 1280, 720
@@ -15,11 +15,15 @@ window.title("Pong")
 window.setup(width=sw, height=sh)
 window.bgcolor("black")
 
-
 """
 Function that clamps a value at a minimum and maximum.
 """
 clamp = lambda num, lo, hi : min(max(lo, num), hi)
+
+"""
+The default range function adjusted for floating-point values.
+"""
+range_float = lambda lo, hi, step=1 : range(int(lo), int(hi), step)
 
 """
 A function to generate a square or rectangle on the screen.
@@ -43,8 +47,8 @@ def paddle(pn, color):
     return paddle
 
 # Set up paddles
-player = paddle(1, "deep sky blue")
-opponent = paddle(2, "salmon")
+player = paddle(1, "#4b8bbe")
+opponent = paddle(2, "#ffe873")
 
 # Player control
 # player_stop_up/down prevents stutter when both keys are pressed.
@@ -63,26 +67,35 @@ window.onkeyrelease(player_stop_down, key_down)
 window.listen()
 
 # Set up divider
-for i in range(int(-sh/1.5), int(sh/1.5), 60):
+for i in range_float(-sh/1.5, sh/1.5, 60):
     divider = make_shape("grey", 2, 0.7, 0, i)
 
 # Set up ball
 ball = make_shape("white", 0.7, 0.7, 0, 0)
-ball.velocity_x, ball.velocity_y = 1, 1
+ball.velocity_x, ball.velocity_y = -1, 1
 
-while True: #needs to change to something != exit
-    # Update loop for player movement
+# Update loop
+while True:
+    # Player movement
     player.sety(clamp(player.ycor() + player.velocity*8, (-sh/2)+60, (sh/2)-60))
 
-    # Update loop for ball x movement
+    # Update loop for ball movement
     ball.velocity_y *= -1 if abs(ball.ycor()) >= (sh/2)-16 else 1
     ball.goto(ball.xcor() + ball.velocity_x*8, ball.ycor() + ball.velocity_y*8)
+
+    # Paddle collision logic for player
+    ball.velocity_x *= -1 if ball.xcor() in range_float(-sw/2.35+5, -sw/2.35+20) and \
+    abs(ball.ycor()) in range_float(player.ycor()-62,(player.ycor()+62)) else 1
+
+    # Paddle collision logic for opponent
+    ball.velocity_x *= -1 if ball.xcor() in range_float(sw/2.35-20, -sw/2.35-5) and \
+    abs(ball.ycor()) in range_float(opponent.ycor()-62,(opponent.ycor()+62)) else 1
 
     # If the ball crosses the threshold, reset everything
     if abs(ball.xcor()) >= (sw/2.1):
         player.sety(0)
         ball.goto(0,0)
 
-    # Push changes to the window
+    # Update the window
     window.update()
-    time.sleep(1/60)
+    sleep(1/60)
