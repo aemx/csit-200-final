@@ -57,9 +57,14 @@ ball.color("white")
 ball.shapesize(0.7)
 ball.up()
 ball.goto(0, 0)
+ball.velocity = -1
 
 while True: #needs to change to something != exit
     window.update()
     
-    # Move up/down
-    player.sety(clamp(player.ycor() + player.velocity*sh/180, (-sh/2)*0.7, (sh/2)*0.7))
+    # Update loop for player movement
+    player.sety(clamp(player.ycor() + player.velocity*sh/150, (-sh/2)*0.86, (sh/2)*0.86))
+    
+    # Update loop for ball movement
+    ball.velocity *= -1 if abs(ball.ycor()) >= (sh/2)*0.95 else 1
+    ball.sety(ball.ycor() + ball.velocity*sh/150)
