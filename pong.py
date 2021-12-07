@@ -1,9 +1,13 @@
 import turtle as t
+import time
 
 # Set up global variables
 sw, sh = 1280, 720
 key_down = "Down"
 key_up = "Up"
+
+# Turn off drawing animations
+t.tracer(0, 0)
 
 # Initialize the game's window
 window = t.Screen()
@@ -11,22 +15,30 @@ window.title("Pong")
 window.setup(width=sw, height=sh)
 window.bgcolor("black")
 
+
 """
 Function that clamps a value at a minimum and maximum.
 """
 clamp = lambda num, lo, hi : min(max(lo, num), hi)
 
 """
+A function to generate a square or rectangle on the screen.
+"""
+def make_shape(color, length, width, xpos, ypos):
+    shape = t.Turtle()
+    shape.speed(0)
+    shape.shape("square")
+    shape.color(color)
+    shape.shapesize(length, width)
+    shape.up()
+    shape.goto(xpos, ypos)
+    return shape
+
+"""
 Function to create a paddle, defined by player number and color.
 """
 def paddle(pn, color):
-    paddle = t.Turtle()
-    paddle.speed(0)
-    paddle.shape("square")
-    paddle.color(color)
-    paddle.shapesize(5, 1)
-    paddle.up()
-    paddle.goto(-(pn % 2 * 2 - 1) * sw/2.35, 0)
+    paddle = make_shape(color, 5, 1, -(pn % 2 * 2 - 1) * sw/2.35, 0)
     paddle.velocity = 0
     return paddle
 
@@ -50,20 +62,15 @@ window.onkeyrelease(player_stop_up, key_up)
 window.onkeyrelease(player_stop_down, key_down)
 window.listen()
 
+# Set up divider
+for i in range(int(-sh/1.5), int(sh/1.5), 60):
+    divider = make_shape("grey", 2, 0.7, 0, i)
+
 # Set up ball
-ball = t.Turtle()
-ball.speed(0)
-ball.shape("square")
-ball.color("white")
-ball.shapesize(0.7)
-ball.up()
-ball.goto(0, 0)
-ball.velocity_x = 1
-ball.velocity_y = 1
+ball = make_shape("white", 0.7, 0.7, 0, 0)
+ball.velocity_x, ball.velocity_y = 1, 1
 
 while True: #needs to change to something != exit
-    window.update()
-    
     # Update loop for player movement
     player.sety(clamp(player.ycor() + player.velocity*8, (-sh/2)+60, (sh/2)-60))
 
@@ -75,3 +82,7 @@ while True: #needs to change to something != exit
     if abs(ball.xcor()) >= (sw/2.1):
         player.sety(0)
         ball.goto(0,0)
+
+    # Push changes to the window
+    window.update()
+    time.sleep(1/60)
