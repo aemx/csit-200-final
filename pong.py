@@ -1,4 +1,5 @@
 import turtle as t
+import math
 from time import sleep
 from random import uniform as random
 
@@ -46,6 +47,24 @@ def clamp(num, lo, hi):
     """
     return min(max(lo, num), hi)
 
+def ease_quick(start, end, x0, x):
+    """
+    Quickly eases a value from one to another based on two other inputs.
+    """
+    dx = (abs(clamp((x - x0) / x, 0, 1)))
+    delta = 1 - dx
+    alpha = -(math.cos(math.pi * delta) - 1) / 2
+    return (1 - alpha) * start + alpha * end if delta >= 0 else start
+
+def ease_gentle(start, end, x0, x):
+    """
+    Gently eases a value from one to another based on two other inputs.
+    """ 
+    dx = abs(clamp((x - x0) / x / 2, 0, 1))
+    delta = 1 - dx
+    alpha = -(math.cos(math.pi * delta) - 1) / 2
+    return (1 - alpha) * start + alpha * end
+
 def make_shape(color, length, width, xpos, ypos):
     """
     Generates a square or rectangle on the screen.
@@ -82,7 +101,7 @@ def new_window():
     
     # Return the window
     return window
-
+    
 def start_round(window, player, opponent, ball, score_p1, score_p2):
     """
     A function to start a new round of Pong.
@@ -99,13 +118,15 @@ def start_round(window, player, opponent, ball, score_p1, score_p2):
     # Reset the positions of each paddle
     player.sety(0)
     opponent.sety(0)
-    
-    # Set the opponent's accuracy
-    opponent.hitpos = random(0, 70)
-    
+
     # Serve the ball at a random angle and y position
     ball.velocity_x, ball.velocity_y = -1*random(0.8, 1.3), random(0.8, 1.3)
     ball.goto(0, random(-(sh/2)+16, (sh/2)-16))
+
+    # Set the opponent's positions
+    opponent.hit_last = 0
+    opponent.hit_next = random(-85, 85) if ball.velocity_x >= 0 else random((-sh/2)+60, (sh/2)-60)
+
     window.update()
 
 def display_winner(window, player, opponent, ball, score_p1, score_p2):
@@ -145,7 +166,6 @@ def main():
     """
     The main function, which starts a new game of Pong.
     """
-    
     # Make a new window
     window = new_window()
 
@@ -182,6 +202,7 @@ def main():
 
     # Start a new round by default
     start_round(window, player, opponent, ball, score_p1, score_p2)
+    hit = False
 
     # Update loop
     while True:
@@ -190,22 +211,38 @@ def main():
         player.sety(clamp(player.ycor() + player.velocity*speed_y, (-sh/2)+60, (sh/2)-60))
 
         # Opponent movement
-        opponent.sety(clamp(ball.ycor() + opponent.hitpos, (-sh/2)+60, (sh/2)-60))
+        clamped_xcor = clamp(ball.xcor(), -sw/2.35+5, sw/2.35-5)
+        ease = ease_gentle if hit else ease_quick
+        if ball.velocity_x >= 0:
+            pos = ease(opponent.hit_last, ball.ycor() + opponent.hit_next, clamped_xcor, sw/2.35-20)
+            opponent.sety(clamp(pos, (-sh/2)+60, (sh/2)-60))
+        else:
+            adjusted_hit_last = ball.ycor() + opponent.hit_last if hit else opponent.hit_last
+            pos = ease(adjusted_hit_last, opponent.hit_next, clamped_xcor, -sw/2.35+20)
+            opponent.sety(clamp(pos, (-sh/2)+60, (sh/2)-60))
 
         # Ball collision/movement
         ball.velocity_y *= -1 if abs(ball.ycor()) >= (sh/2)-16 else 1
         ball.goto(ball.xcor() + ball.velocity_x*speed_x, ball.ycor() + ball.velocity_y*speed_y)
 
         # Paddle collision for player
-        # Also, generate a new position for the opponent to follow
+        # Generate a new position for the opponent to follow
         if -sw/2.35+5 <= ball.xcor() <= -sw/2.35+20 and \
         player.ycor()-62 <= ball.ycor() <= player.ycor()+62:
             ball.velocity_x *= -1
-            opponent.hitpos = random(0, 75)
+            hit = True
+            opponent.hit_last = opponent.hit_next
+            opponent.hit_next = random(-85, 85)
 
-        # Paddle collision logic for opponent
-        ball.velocity_x *= -1 if sw/2.35-20 <= ball.xcor() <= sw/2.35-5 and \
-        opponent.ycor()-62 <= ball.ycor() <= opponent.ycor()+62 else 1
+        # Paddle collision for opponent
+        # Generate a new position for the opponent to idle at
+        if sw/2.35-20 <= ball.xcor() <= sw/2.35-5 and \
+        opponent.ycor()-62 <= ball.ycor() <= opponent.ycor()+62:
+            ball.velocity_x *= -1
+            hit = True
+            opponent.hit_last = opponent.hit_next
+            opponent.hit_next = random((-sh/2)+60, (sh/2)-60)
+            
 
         # Update the window @ 144 Hz
         window.update()
@@ -227,6 +264,7 @@ def main():
                 display_winner(window, player, opponent, ball, score_p1, score_p2)
             else:
                 start_round(window, player, opponent, ball, score_p1, score_p2)
+                hit = False
 
 if __name__ == "__main__":
     main()
