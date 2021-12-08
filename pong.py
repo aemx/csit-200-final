@@ -102,7 +102,7 @@ def new_window():
     # Return the window
     return window
     
-def start_round(window, player, opponent, ball, score_p1, score_p2):
+def start_round(window, player, opponent, ball, score_p1, score_p2, last_winner=-1):
     """
     A function to start a new round of Pong.
     """ 
@@ -120,7 +120,7 @@ def start_round(window, player, opponent, ball, score_p1, score_p2):
     opponent.sety(0)
 
     # Serve the ball at a random angle and y position
-    ball.velocity_x, ball.velocity_y = -1*random(0.8, 1.3), random(0.8, 1.3)
+    ball.velocity_x, ball.velocity_y = last_winner*random(0.8, 1.3), random(0.8, 1.3)
     ball.goto(0, random(-(sh/2)+16, (sh/2)-16))
 
     # Set the opponent's positions
@@ -242,7 +242,6 @@ def main():
             hit = True
             opponent.hit_last = opponent.hit_next
             opponent.hit_next = random((-sh/2)+60, (sh/2)-60)
-            
 
         # Update the window @ 144 Hz
         window.update()
@@ -263,7 +262,8 @@ def main():
             elif opponent.score == 15:
                 display_winner(window, player, opponent, ball, score_p1, score_p2)
             else:
-                start_round(window, player, opponent, ball, score_p1, score_p2)
+                round_winner = 1 if ball.velocity_x >= 0 else -1
+                start_round(window, player, opponent, ball, score_p1, score_p2, round_winner)
                 hit = False
 
 if __name__ == "__main__":
