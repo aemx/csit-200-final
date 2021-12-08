@@ -9,10 +9,10 @@ key_down = "Down"
 key_up = "Up"
 
 """
-Code for the Text class, a Turtle object that has the ability to display strings.
+Code for the Score class, a Turtle object that has the ability to display a score strings.
 """
-class Text:
-    def __init__(self, string="", color="FFFFFF", size=12, xpos=0, ypos=0):
+class Score:
+    def __init__(self, string="", color="white", xpos=0):
         """
         A constructor that loads a Turtle object, then initalizes five attributes.
         """
@@ -20,23 +20,21 @@ class Text:
         self.turtle.up()
         self.__string = str(string)
         self.__color = color
-        self.__size = size
         self.__xpos = xpos
-        self.__ypos = ypos
 
     def __load(self):
         """
         A private function that loads data entered from the object.
         """
         self.turtle.color(self.__color)
-        self.turtle.goto(self.__xpos, self.__ypos)
-        self.turtle.write(str(self.__string), True, "right", ("Pong Score", self.__size))
+        self.turtle.goto(self.__xpos, sh/4.25)
+        self.turtle.write(str(self.__string), True, "right", ("Pong Score", 120))
         self.turtle.hideturtle()
         self.turtle.up()
 
     def update(self, newstring):
         """
-        A function that updates the Text object with a new string.
+        A function that updates the Score object with a new string.
         """
         self.__string = str(newstring)
         self.turtle.clear()
@@ -110,6 +108,39 @@ def start_round(window, player, opponent, ball, score_p1, score_p2):
     ball.goto(0, random(-(sh/2)+16, (sh/2)-16))
     window.update()
 
+def display_winner(window, player, opponent, ball, score_p1, score_p2):
+    """
+    Displays a string in the window indicating the winner of the game.
+    """ 
+    # Remove the ball from the screen
+    ball.goto(0, sh*2)
+    
+    # Set scores
+    score_p1.update(player.score)
+    score_p2.update(opponent.score)
+
+    # Generate a box to allow for text contrast
+    make_shape("#111111", 10, 50, 0, 0)
+
+    # Update window early to prevent any strange overlap
+    window.update()
+
+    # Set a string 
+    winner = "You" if player.score > opponent.score else "The CPU"
+
+    # Generate the winning message
+    message = t.Turtle()
+    message.up()
+    message.color("white")
+    message.goto(0, -40)
+    message.write(winner + " won the game!", True, "center", ("Consolas", 56, "bold"))
+    message.hideturtle()
+    message.up()
+
+    # Exit after 5 seconds
+    sleep(5)
+    quit()
+
 def main():
     """
     The main function, which starts a new game of Pong.
@@ -146,8 +177,8 @@ def main():
     ball = make_shape("white", 0.7, 0.7, 0, 0)
 
     # Set up scoreboard
-    score_p1 = Text(player.score, "#4b8bbe", 120, -sw/2.8+sw/3.8, sh/4)
-    score_p2 = Text(opponent.score, "#ffe873", 120, sw/2.8, sh/4)
+    score_p1 = Score(player.score, "#4b8bbe", -sw/2.8+sw/3.8)
+    score_p2 = Score(opponent.score, "#ffe873", sw/2.8)
 
     # Start a new round by default
     start_round(window, player, opponent, ball, score_p1, score_p2)
@@ -191,9 +222,9 @@ def main():
                 
             # Start a new round if no player has 15 points
             if player.score == 15:
-                quit()
+                display_winner(window, player, opponent, ball, score_p1, score_p2)
             elif opponent.score == 15:
-                quit()
+                display_winner(window, player, opponent, ball, score_p1, score_p2)
             else:
                 start_round(window, player, opponent, ball, score_p1, score_p2)
 
