@@ -6,6 +6,7 @@ from random import uniform as random
 # Global variables
 sw, sh = 1280, 720
 speed_x, speed_y = 6*sw/1280, 6*sh/720
+max_score = 15
 key_down = "Down"
 key_up = "Up"
 
@@ -98,23 +99,23 @@ def new_window():
     window.title("PyPong")
     window.setup(sw, sh)
     window.bgcolor("black")
-    
+
     # Return the window
     return window
-    
+
 def start_round(window, player, opponent, ball, score_p1, score_p2, last_winner=-1):
     """
     A function to start a new round of Pong.
     """ 
     # Remove the ball from the screen
     ball.goto(0, sh*2)
-    
+
     # Set scores
     score_p1.update(player.score)
     score_p2.update(opponent.score)
     window.update()
     sleep(1)
-    
+
     # Reset the positions of each paddle
     player.sety(0)
     opponent.sety(0)
@@ -135,7 +136,7 @@ def display_winner(window, player, opponent, ball, score_p1, score_p2):
     """ 
     # Remove the ball from the screen
     ball.goto(0, sh*2)
-    
+
     # Set scores
     score_p1.update(player.score)
     score_p2.update(opponent.score)
@@ -158,9 +159,8 @@ def display_winner(window, player, opponent, ball, score_p1, score_p2):
     message.hideturtle()
     message.up()
 
-    # Exit after 5 seconds
+    # Pause for 5 seconds
     sleep(5)
-    quit()
 
 def main():
     """
@@ -203,9 +203,9 @@ def main():
     # Start a new round by default
     start_round(window, player, opponent, ball, score_p1, score_p2)
     hit = False
-
+    finished = False
     # Update loop
-    while True:
+    while not finished:
 
         # Player movement
         player.sety(clamp(player.ycor() + player.velocity*speed_y, (-sh/2)+60, (sh/2)-60))
@@ -246,21 +246,20 @@ def main():
         # Update the window @ 144 Hz
         window.update()
         sleep(1/144)
-        
+
         # But, if the ball goes out of bounds...add to the score, and start a new round
         if abs(ball.xcor()) >= (sw/2.1):
-            
+
             # Add to the score
             if ball.xcor() > 0:
                 player.score += 1
             else:
                 opponent.score += 1
-                
-            # Start a new round if no player has 15 points
-            if player.score == 15:
+
+            # Start a new round if no player has the max amount of points
+            if player.score == max_score or opponent.score == max_score:
                 display_winner(window, player, opponent, ball, score_p1, score_p2)
-            elif opponent.score == 15:
-                display_winner(window, player, opponent, ball, score_p1, score_p2)
+                finished = True
             else:
                 round_winner = 1 if ball.velocity_x >= 0 else -1
                 start_round(window, player, opponent, ball, score_p1, score_p2, round_winner)
